@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850241176904",
+    "project_id": "fir-1-a34fb",
+    "storage_bucket": "fir-1-a34fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850241176904:android:bd10395d723b6c22f01f7d",
+        "android_client_info": {
+          "package_name": "com.example.amiot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8cT05KQ7t_7665CVPUDP1kRhn8LgPE68"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
