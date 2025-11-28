@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.amiot.data.NewsItemSerializable
+import com.example.amiot.data.NewsItemFirestore
 import com.example.amiot.ui.components.Logo
 import com.example.amiot.viewmodel.NewsViewModel
 import com.example.amiot.viewmodel.NewsViewModelFactory
@@ -126,7 +126,7 @@ fun NewsScreen(
     }
 }
 
-fun NewsItemSerializable.toNewsItem(): NewsItem {
+fun NewsItemFirestore.toNewsItem(): NewsItem {
     return NewsItem(
         id = this.id,
         title = this.title,

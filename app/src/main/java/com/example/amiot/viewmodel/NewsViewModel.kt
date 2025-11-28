@@ -3,8 +3,9 @@ package com.example.amiot.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.amiot.data.NewsRepository
-import com.example.amiot.data.NewsItemSerializable
+import com.example.amiot.data.FirestoreNewsRepository
+import com.example.amiot.data.NewsItemFirestore
+import com.example.amiot.data.FirebaseAuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,16 +19,25 @@ data class NewsUiState(
 )
 
 class NewsViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = NewsRepository(application)
+    private val repository = FirestoreNewsRepository()
+    private val authRepository = FirebaseAuthRepository()
 
     private val _uiState = MutableStateFlow(NewsUiState())
     val uiState: StateFlow<NewsUiState> = _uiState.asStateFlow()
 
-    val userNews: StateFlow<List<NewsItemSerializable>> = repository.userNews.stateIn(
-        scope = viewModelScope,
-        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    private val _userNews = MutableStateFlow<List<NewsItemFirestore>>(emptyList())
+    val userNews: StateFlow<List<NewsItemFirestore>> = _userNews.asStateFlow()
+    
+    init {
+        viewModelScope.launch {
+            val currentUser = authRepository.getCurrentUser()
+            if (currentUser != null) {
+                repository.listenToUserNews(currentUser.uid).collect { news ->
+                    _userNews.value = news
+                }
+            }
+        }
+    }
 
     fun addNews(
         title: String,
@@ -48,17 +58,23 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            val news = NewsItemSerializable(
-                id = UUID.randomUUID().toString(),
-                title = title,
-                content = shortContent,
-                fullContent = fullContent,
-                date = date,
-                category = category,
-                isUserCreated = true
-            )
+            val currentUser = authRepository.getCurrentUser()
+            if (currentUser == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Debes estar autenticado para agregar noticias"
+                )
+                return@launch
+            }
 
-            repository.addNews(news).fold(
+            repository.addNews(
+                userId = currentUser.uid,
+                title = title,
+                shortContent = shortContent,
+                fullContent = fullContent,
+                category = category,
+                date = date
+            ).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                     onSuccess()
@@ -71,6 +87,10 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
                 }
             )
         }
+    }
+    
+    suspend fun getAllNews(): List<NewsItemFirestore> {
+        return repository.getAllNews()
     }
 
     fun clearError() {
